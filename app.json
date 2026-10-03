@@ -1,0 +1,47 @@
+{
+  "expo": {
+    "name": "Gymapp",
+    "slug": "gymapp",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "gymapp",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#10120E",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "app.gymapp.mobile"
+    },
+    "android": {
+      "package": "app.gymapp.mobile",
+      "adaptiveIcon": {
+        "backgroundColor": "#10120E",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png",
+      "backgroundColor": "#10120E"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-status-bar",
+      "expo-image",
+      "expo-sharing",
+      [
+        "expo-file-system",
+        {
+          "supportsOpeningDocumentsInPlace": true,
+          "enableFileSharing": true
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
