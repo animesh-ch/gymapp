@@ -46,7 +46,7 @@ export default function RecordScreen() {
             <View className="flex-1 gap-2">
               <Text className="text-base font-semibold">{item.name}</Text>
               <View className="flex-row flex-wrap items-center gap-2">
-                <Badge variant="secondary">
+                <Badge>
                   <Text>{categoryLabel(item.category)}</Text>
                 </Badge>
                 <Text variant="muted" className="flex-1">

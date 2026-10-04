@@ -58,3 +58,10 @@
     --chart-5: 340 75% 55%;
   }
 }
+
+/* Enter animations from the component pack stay at opacity 0 on web. */
+.animate-in,
+.animate-out {
+  animation: none;
+  opacity: 1;
+}
