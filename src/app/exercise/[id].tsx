@@ -1,13 +1,18 @@
 import { Image } from "expo-image";
 import { Stack, router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import { Keyboard, StyleSheet, Text, TextInput, View } from "react-native";
+import { Keyboard, View } from "react-native";
 
-import { ConfirmDialog, FieldLabel, Notice, PrimaryButton, Screen } from "@/components";
+import { ConfirmDialog, Notice, Screen } from "@/components/screen";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Text } from "@/components/ui/text";
 import { categoryLabel, formatMuscles, formatRecordedAt, parseReps, recordsForExercise } from "@/domain";
 import { exerciseGifSource } from "@/gifs";
 import { useLibrary } from "@/library-context";
-import { theme } from "@/theme";
 
 export default function ExerciseScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -65,42 +70,56 @@ export default function ExerciseScreen() {
     <Screen scroll>
       <Stack.Screen options={{ title: exercise.name }} />
       {gif ? (
-        <Image source={gif} style={styles.gif} contentFit="contain" accessibilityLabel={`${exercise.name} demonstration`} />
+        <View className="border-border bg-card overflow-hidden rounded-xl border">
+          <Image source={gif} style={{ width: "100%", height: 220 }} contentFit="contain" accessibilityLabel={`${exercise.name} demonstration`} />
+        </View>
       ) : (
-        <View style={styles.gifMissing}>
-          <Text style={styles.gifMissingText}>No demonstration GIF</Text>
+        <View className="border-border bg-card h-40 items-center justify-center rounded-xl border">
+          <Text variant="muted">No demonstration GIF</Text>
         </View>
       )}
-      <Text style={styles.meta}>
-        {categoryLabel(exercise.category)} · {formatMuscles(exercise.muscles)}
-      </Text>
-      <Text style={styles.source}>{exercise.source === "builtin" ? "Included with the app" : "Added on this device"}</Text>
-      <FieldLabel>Repetitions</FieldLabel>
-      <TextInput
-        value={reps}
-        onChangeText={setReps}
-        keyboardType="number-pad"
-        inputMode="numeric"
-        maxLength={4}
-        placeholder="8"
-        placeholderTextColor={theme.muted}
-        style={styles.reps}
-      />
-      {error ? <Notice message={error} tone="danger" /> : null}
-      <PrimaryButton label="Save reps" disabled={saving || !library.ready} onPress={() => void saveReps()} />
-      <FieldLabel>Previous entries</FieldLabel>
-      {history.length === 0 ? <Notice message="No reps logged yet." /> : null}
-      {history.map((record) => (
-        <View key={record.id} style={styles.entry}>
-          <Text style={styles.entryReps}>{record.reps} reps</Text>
-          <Text style={styles.entryTime}>{formatRecordedAt(record.recordedAt)}</Text>
-        </View>
-      ))}
+      <View className="flex-row flex-wrap items-center gap-2">
+        <Badge>
+          <Text>{categoryLabel(exercise.category)}</Text>
+        </Badge>
+        <Text variant="muted">{formatMuscles(exercise.muscles)}</Text>
+      </View>
+      <Text variant="muted">{exercise.source === "builtin" ? "Included with the app" : "Added on this device"}</Text>
+      <Card className="gap-4 py-5">
+        <CardContent className="gap-3">
+          <Label>Repetitions</Label>
+          <Input
+            value={reps}
+            onChangeText={setReps}
+            keyboardType="number-pad"
+            inputMode="numeric"
+            maxLength={4}
+            placeholder="8"
+            className="h-16 text-center text-3xl font-bold"
+          />
+          {error ? <Notice message={error} tone="danger" /> : null}
+          <Button className="h-12 w-full" size="lg" disabled={saving || !library.ready} onPress={() => void saveReps()}>
+            <Text className="text-base">Save reps</Text>
+          </Button>
+        </CardContent>
+      </Card>
+      <View className="gap-3">
+        <Label>Previous entries</Label>
+        {history.length === 0 ? <Notice message="No reps logged yet." /> : null}
+        {history.map((record) => (
+          <View key={record.id} className="border-border bg-card flex-row items-center justify-between gap-3 rounded-xl border px-4 py-3">
+            <Text className="font-semibold">{record.reps} reps</Text>
+            <Text variant="muted">{formatRecordedAt(record.recordedAt)}</Text>
+          </View>
+        ))}
+      </View>
       {exercise.source === "custom" ? (
-        <PrimaryButton label="Delete exercise" variant="danger" onPress={() => setConfirmDelete(true)} />
+        <Button variant="destructive" className="w-full" onPress={() => setConfirmDelete(true)}>
+          <Text>Delete exercise</Text>
+        </Button>
       ) : null}
       <ConfirmDialog
-        visible={confirmDelete}
+        open={confirmDelete}
         title="Delete this exercise?"
         body="It leaves the library, and the reps you logged for it are removed. Built-in exercises stay."
         confirmLabel="Delete"
@@ -111,67 +130,3 @@ export default function ExerciseScreen() {
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  gif: {
-    width: "100%",
-    height: 220,
-    backgroundColor: theme.surface,
-    borderRadius: 18,
-  },
-  gifMissing: {
-    width: "100%",
-    height: 160,
-    borderRadius: 18,
-    backgroundColor: theme.surface,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: theme.line,
-  },
-  gifMissingText: {
-    color: theme.muted,
-    fontSize: 15,
-  },
-  meta: {
-    color: theme.text,
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  source: {
-    color: theme.muted,
-    fontSize: 14,
-  },
-  reps: {
-    backgroundColor: theme.surface,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: theme.line,
-    color: theme.text,
-    fontSize: 32,
-    fontWeight: "700",
-    minHeight: 72,
-    paddingHorizontal: 16,
-  },
-  entry: {
-    backgroundColor: theme.surface,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: theme.line,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 12,
-  },
-  entryReps: {
-    color: theme.text,
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  entryTime: {
-    color: theme.muted,
-    fontSize: 14,
-  },
-});

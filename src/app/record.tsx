@@ -1,11 +1,15 @@
 import { router } from "expo-router";
+import { ChevronRight } from "lucide-react-native";
 import { useMemo, useState } from "react";
-import { FlatList, Pressable, StyleSheet, Text, TextInput } from "react-native";
+import { FlatList, Pressable, View } from "react-native";
 
-import { Screen } from "@/components";
+import { Screen } from "@/components/screen";
+import { Badge } from "@/components/ui/badge";
+import { Icon } from "@/components/ui/icon";
+import { Input } from "@/components/ui/input";
+import { Text } from "@/components/ui/text";
 import { categoryLabel, formatMuscles, searchExercises } from "@/domain";
 import { useLibrary } from "@/library-context";
-import { theme } from "@/theme";
 
 export default function RecordScreen() {
   const { exercises, ready } = useLibrary();
@@ -14,90 +18,46 @@ export default function RecordScreen() {
 
   return (
     <Screen>
-      <TextInput
+      <Input
         value={query}
         onChangeText={setQuery}
         placeholder={ready ? "Search by name" : "Loading exercises"}
-        placeholderTextColor={theme.muted}
         autoCapitalize="none"
         autoCorrect={false}
         clearButtonMode="while-editing"
-        style={styles.search}
+        className="h-12 text-base"
       />
-      <Text style={styles.count}>
+      <Text variant="muted">
         {results.length} {results.length === 1 ? "exercise" : "exercises"}
       </Text>
       <FlatList
         data={results}
         keyExtractor={(item) => item.id}
         keyboardShouldPersistTaps="handled"
-        style={styles.listFill}
-        contentContainerStyle={styles.list}
-        ListEmptyComponent={<Text style={styles.empty}>No exercises match that name.</Text>}
+        className="flex-1"
+        contentContainerClassName="gap-2.5 pb-6"
+        ListEmptyComponent={<Text variant="muted">No exercises match that name.</Text>}
         renderItem={({ item }) => (
           <Pressable
             accessibilityRole="button"
             onPress={() => router.push({ pathname: "/exercise/[id]", params: { id: item.id } })}
-            style={({ pressed }) => [styles.row, pressed ? styles.pressed : null]}
+            className="border-border bg-card active:bg-accent hover:bg-accent flex-row items-center gap-3 rounded-xl border px-4 py-3.5"
           >
-            <Text style={styles.name}>{item.name}</Text>
-            <Text style={styles.meta}>
-              {categoryLabel(item.category)} · {formatMuscles(item.muscles)}
-            </Text>
+            <View className="flex-1 gap-2">
+              <Text className="text-base font-semibold">{item.name}</Text>
+              <View className="flex-row flex-wrap items-center gap-2">
+                <Badge>
+                  <Text>{categoryLabel(item.category)}</Text>
+                </Badge>
+                <Text variant="muted" className="flex-1">
+                  {formatMuscles(item.muscles)}
+                </Text>
+              </View>
+            </View>
+            <Icon as={ChevronRight} className="text-muted-foreground" size={18} />
           </Pressable>
         )}
       />
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  search: {
-    backgroundColor: theme.surface,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: theme.line,
-    color: theme.text,
-    fontSize: 17,
-    minHeight: 52,
-    paddingHorizontal: 16,
-  },
-  count: {
-    color: theme.muted,
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  listFill: {
-    flex: 1,
-  },
-  list: {
-    gap: 10,
-    paddingBottom: 24,
-  },
-  row: {
-    backgroundColor: theme.surface,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: theme.line,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    gap: 4,
-  },
-  pressed: {
-    opacity: 0.82,
-  },
-  name: {
-    color: theme.text,
-    fontSize: 17,
-    fontWeight: "700",
-  },
-  meta: {
-    color: theme.muted,
-    fontSize: 14,
-  },
-  empty: {
-    color: theme.muted,
-    fontSize: 15,
-    paddingVertical: 12,
-  },
-});
