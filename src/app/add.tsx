@@ -1,14 +1,20 @@
 import * as DocumentPicker from "expo-document-picker";
 import { Image } from "expo-image";
 import { router } from "expo-router";
+import { ImagePlus } from "lucide-react-native";
 import { useState } from "react";
-import { StyleSheet, Text, TextInput, View } from "react-native";
+import { View } from "react-native";
 
-import { Chip, FieldLabel, Notice, PrimaryButton, Screen } from "@/components";
+import { Notice, Screen } from "@/components/screen";
+import { Button } from "@/components/ui/button";
+import { Icon } from "@/components/ui/icon";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Text } from "@/components/ui/text";
+import { Toggle } from "@/components/ui/toggle";
 import { CATEGORIES, MUSCLES, categoryLabel, muscleLabel, validateNewExercise, type Category, type Muscle } from "@/domain";
 import { useLibrary } from "@/library-context";
 import { readPickedGifBase64 } from "@/storage";
-import { theme } from "@/theme";
 
 const MAX_GIF_BYTES = 8 * 1024 * 1024;
 
@@ -71,70 +77,68 @@ export default function AddExerciseScreen() {
 
   return (
     <Screen scroll>
-      <FieldLabel>Name</FieldLabel>
-      <TextInput
-        value={name}
-        onChangeText={setName}
-        placeholder="Nordic curl"
-        placeholderTextColor={theme.muted}
-        autoCorrect={false}
-        style={styles.input}
-      />
-      <FieldLabel>Category</FieldLabel>
-      <View style={styles.wrap}>
-        {CATEGORIES.map((item) => (
-          <Chip key={item} label={categoryLabel(item)} selected={category === item} onPress={() => setCategory(item)} />
-        ))}
+      <View className="gap-2">
+        <Label>Name</Label>
+        <Input value={name} onChangeText={setName} placeholder="Nordic curl" autoCorrect={false} className="h-12 text-base" />
       </View>
-      <FieldLabel>Muscles</FieldLabel>
-      <View style={styles.wrap}>
-        {MUSCLES.map((muscle) => (
-          <Chip key={muscle} label={muscleLabel(muscle)} selected={muscles.includes(muscle)} onPress={() => toggleMuscle(muscle)} />
-        ))}
+      <View className="gap-2">
+        <Label>Category</Label>
+        <View className="flex-row flex-wrap gap-2">
+          {CATEGORIES.map((item) => (
+            <Choice key={item} label={categoryLabel(item)} selected={category === item} onPress={() => setCategory(item)} />
+          ))}
+        </View>
       </View>
-      <FieldLabel>Demonstration GIF</FieldLabel>
-      <Text style={styles.hint}>Optional. A short GIF showing how the exercise is done.</Text>
-      {gifBase64 ? (
-        <Image
-          source={{ uri: `data:image/gif;base64,${gifBase64}` }}
-          style={styles.preview}
-          contentFit="contain"
-          accessibilityLabel="Selected demonstration"
-        />
-      ) : null}
-      <PrimaryButton label={gifBase64 ? "Replace GIF" : "Choose GIF"} variant="outline" onPress={() => void chooseGif()} />
-      {gifBase64 ? <PrimaryButton label="Remove GIF" variant="outline" onPress={() => setGifBase64(null)} /> : null}
+      <View className="gap-2">
+        <Label>Muscles</Label>
+        <View className="flex-row flex-wrap gap-2">
+          {MUSCLES.map((muscle) => (
+            <Choice key={muscle} label={muscleLabel(muscle)} selected={muscles.includes(muscle)} onPress={() => toggleMuscle(muscle)} />
+          ))}
+        </View>
+      </View>
+      <View className="gap-2">
+        <Label>Demonstration GIF</Label>
+        <Text variant="muted" className="leading-5">
+          Optional. A short GIF showing how the exercise is done.
+        </Text>
+        {gifBase64 ? (
+          <View className="border-border bg-card overflow-hidden rounded-xl border">
+            <Image
+              source={{ uri: `data:image/gif;base64,${gifBase64}` }}
+              style={{ width: "100%", height: 180 }}
+              contentFit="contain"
+              accessibilityLabel="Selected demonstration"
+            />
+          </View>
+        ) : null}
+        <Button variant="outline" className="w-full" onPress={() => void chooseGif()}>
+          <Icon as={ImagePlus} size={16} />
+          <Text>{gifBase64 ? "Replace GIF" : "Choose GIF"}</Text>
+        </Button>
+        {gifBase64 ? (
+          <Button variant="ghost" className="w-full" onPress={() => setGifBase64(null)}>
+            <Text>Remove GIF</Text>
+          </Button>
+        ) : null}
+      </View>
       {error ? <Notice message={error} tone="danger" /> : null}
-      <PrimaryButton label="Save exercise" disabled={saving || !library.ready} onPress={() => void save()} />
+      <Button className="h-12 w-full" size="lg" disabled={saving || !library.ready} onPress={() => void save()}>
+        <Text className="text-base">Save exercise</Text>
+      </Button>
     </Screen>
   );
 }
 
-const styles = StyleSheet.create({
-  input: {
-    backgroundColor: theme.surface,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: theme.line,
-    color: theme.text,
-    fontSize: 17,
-    minHeight: 52,
-    paddingHorizontal: 16,
-  },
-  wrap: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  hint: {
-    color: theme.muted,
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  preview: {
-    width: "100%",
-    height: 180,
-    backgroundColor: theme.surface,
-    borderRadius: 16,
-  },
-});
+function Choice({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
+  return (
+    <Toggle
+      pressed={selected}
+      onPressedChange={() => onPress()}
+      variant="outline"
+      className={selected ? "border-primary bg-primary" : undefined}
+    >
+      <Text className={selected ? "text-primary-foreground" : undefined}>{label}</Text>
+    </Toggle>
+  );
+}

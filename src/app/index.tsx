@@ -2,15 +2,19 @@ import * as DocumentPicker from "expo-document-picker";
 import * as Sharing from "expo-sharing";
 import { router } from "expo-router";
 import { File, Paths } from "expo-file-system";
+import { Download, Dumbbell, Plus, Upload } from "lucide-react-native";
 import { useState } from "react";
-import { Platform, StyleSheet, Text, View } from "react-native";
+import { Platform, View } from "react-native";
 
-import { ConfirmDialog, Notice, PrimaryButton, Screen } from "@/components";
+import { ConfirmDialog, Notice, Screen } from "@/components/screen";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Icon } from "@/components/ui/icon";
+import { Text } from "@/components/ui/text";
 import { parseImport, type UserData } from "@/domain";
 import { useLibrary } from "@/library-context";
 import { BUILTIN_EXERCISES } from "@/library";
 import { exportFileName, readPickedText } from "@/storage";
-import { theme } from "@/theme";
 
 export default function HomeScreen() {
   const library = useLibrary();
@@ -80,11 +84,12 @@ export default function HomeScreen() {
   }
 
   async function confirmImport() {
-    if (!pendingImport) return;
+    const next = pendingImport;
+    if (!next) return;
+    setPendingImport(null);
     setBusy(true);
     try {
-      await library.importBackup(pendingImport);
-      setPendingImport(null);
+      await library.importBackup(next);
       show("Backup imported.");
     } catch (error) {
       show(error instanceof Error ? error.message : "Could not import that backup.", "danger");
@@ -93,24 +98,53 @@ export default function HomeScreen() {
     }
   }
 
+  const disabled = busy || !library.ready;
+
   return (
     <Screen includeTop scroll>
-      <Text style={styles.mark}>Gymapp</Text>
-      <Text style={styles.lead}>Log reps for an exercise. The library and your history stay on this device.</Text>
-      <PrimaryButton label="Record exercise" onPress={() => router.push("/record")} />
-      <PrimaryButton label="Add new exercise" variant="outline" onPress={() => router.push("/add")} />
-      <View style={styles.backup}>
-        <Text style={styles.backupTitle}>Backup</Text>
-        <Text style={styles.backupBody}>
-          Export writes a JSON file. Import replaces custom exercises and rep history. The built-in library stays in the app.
+      <View className="gap-2 pt-6">
+        <Text variant="muted" className="uppercase tracking-[0.22em]">
+          Workout log
         </Text>
-        <PrimaryButton label="Export backup" variant="outline" disabled={busy || !library.ready} onPress={() => void onExport()} />
-        <PrimaryButton label="Import backup" variant="outline" disabled={busy || !library.ready} onPress={() => void onImport()} />
-        {library.loadError ? <Notice message={library.loadError} tone="danger" /> : null}
-        {message ? <Notice message={message} tone={messageTone} /> : null}
+        <Text variant="h1" className="text-left text-5xl">
+          Gymapp
+        </Text>
+        <Text className="text-muted-foreground text-base leading-6">
+          Log reps for an exercise. The library and your history stay on this device.
+        </Text>
       </View>
+      <View className="gap-3">
+        <Button className="h-14 w-full" size="lg" onPress={() => router.push("/record")}>
+          <Icon as={Dumbbell} size={18} />
+          <Text className="text-base">Record exercise</Text>
+        </Button>
+        <Button className="h-14 w-full" size="lg" variant="outline" onPress={() => router.push("/add")}>
+          <Icon as={Plus} size={18} />
+          <Text className="text-base">Add new exercise</Text>
+        </Button>
+      </View>
+      <Card>
+        <CardHeader>
+          <CardTitle>Backup</CardTitle>
+          <CardDescription>
+            Export writes a JSON file. Import replaces custom exercises and rep history. The built-in library stays in the app.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="gap-3">
+          <Button className="w-full" variant="secondary" disabled={disabled} onPress={() => void onExport()}>
+            <Icon as={Download} size={16} />
+            <Text>Export backup</Text>
+          </Button>
+          <Button className="w-full" variant="secondary" disabled={disabled} onPress={() => void onImport()}>
+            <Icon as={Upload} size={16} />
+            <Text>Import backup</Text>
+          </Button>
+          {library.loadError ? <Notice message={library.loadError} tone="danger" /> : null}
+          {message ? <Notice message={message} tone={messageTone} /> : null}
+        </CardContent>
+      </Card>
       <ConfirmDialog
-        visible={pendingImport !== null}
+        open={pendingImport !== null}
         title="Replace local data?"
         body="This replaces your custom exercises and rep history with the file. The built-in library stays as it shipped."
         confirmLabel="Import"
@@ -130,32 +164,3 @@ function downloadTextFile(filename: string, contents: string) {
   anchor.click();
   URL.revokeObjectURL(url);
 }
-
-const styles = StyleSheet.create({
-  mark: {
-    color: theme.text,
-    fontSize: 42,
-    fontWeight: "800",
-    letterSpacing: -1,
-  },
-  lead: {
-    color: theme.muted,
-    fontSize: 17,
-    lineHeight: 24,
-    marginBottom: 8,
-  },
-  backup: {
-    marginTop: 12,
-    gap: 12,
-  },
-  backupTitle: {
-    color: theme.text,
-    fontSize: 20,
-    fontWeight: "700",
-  },
-  backupBody: {
-    color: theme.muted,
-    fontSize: 15,
-    lineHeight: 22,
-  },
-});
